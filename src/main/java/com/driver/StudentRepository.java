@@ -1,71 +1,78 @@
 package com.driver;
 
-import java.util.*;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 @Repository
 public class StudentRepository {
-
-    private HashMap<String, Student> studentMap;
-    private HashMap<String, Teacher> teacherMap;
-    private HashMap<String, List<String>> teacherStudentMapping;
-
+    //@Autowired
+    HashMap<String,Student> studentRepo;
+    //@Autowired
+    HashMap<String,Teacher> teacherRepo;
+    //@Autowired
+    HashMap<String,ArrayList<String>> teacherStudentRepo;
     public StudentRepository(){
-        this.studentMap = new HashMap<String, Student>();
-        this.teacherMap = new HashMap<String, Teacher>();
-        this.teacherStudentMapping = new HashMap<String, List<String>>();
+        studentRepo=new HashMap<>();
+        teacherRepo=new HashMap<>();
+        teacherStudentRepo=new HashMap<>();
     }
-
-    public void saveStudent(Student student){
-        // your code goes here
-        studentMap.put(student.getName(), student);
+    public void addStudent(Student student){
+        studentRepo.put(student.getName(),student);
     }
-
-    public void saveTeacher(Teacher teacher){
-        // your code goes here
-        teacherMap.put(teacher.getName(), teacher);
+    public void addTeacher(Teacher teacher){
+        teacherRepo.put(teacher.getName(), teacher);
     }
-
-    public void saveStudentTeacherPair(String student, String teacher){
-        if(studentMap.containsKey(student) && teacherMap.containsKey(teacher)){
-            // your code goes here
-            List<String> students = teacherStudentMapping.getOrDefault(teacher, new ArrayList<>());
-            students.add(student);
-            teacherStudentMapping.put(teacher, students);
+    public void addStudentTeacherPair(String student, String teacher){
+        if(teacherStudentRepo.containsKey(teacher)){
+            ArrayList<String> temp =teacherStudentRepo.get(teacher);
+            temp.add(student);
+            teacherStudentRepo.put(teacher,temp);
         }
-    }
+        else{
+            ArrayList<String> temp =new ArrayList<>();
+            temp.add(student);
+            teacherStudentRepo.put(teacher,temp);
+        }
+        Teacher teacherObj=teacherRepo.get(teacher);
+        teacherObj.setNumberOfStudents(teacherObj.getNumberOfStudents()+1);
 
-    public Student findStudent(String student){
-        // your code goes here
-        return studentMap.get(student);
     }
-
-    public Teacher findTeacher(String teacher){
-        // your code goes here
-        return teacherMap.get(teacher);
+    public Student getStudentByName(String name){
+        return studentRepo.getOrDefault(name, null);
     }
-
-    public List<String> findStudentsFromTeacher(String teacher){
-        // your code goes here
-        // find student list corresponding to a teacher
-        return teacherStudentMapping.getOrDefault(teacher, new ArrayList<>());
+    public Teacher getTeacherByName(String name){
+        return teacherRepo.getOrDefault(name, null);
     }
-
-    public List<String> findAllStudents(){
-        // your code goes here
-        return new ArrayList<>(studentMap.keySet());
+    public List<String> getStudentsByTeacherName(String teacher){
+        return teacherStudentRepo.getOrDefault(teacher,new ArrayList<>());
     }
-
-    public void deleteTeacher(String teacher){
-        // your code goes here
-        teacherMap.remove(teacher);
-        teacherStudentMapping.remove(teacher);
+    public List<String> getAllStudents(){
+//        ArrayList<String> temp=new ArrayList<>();
+//        for(String name:studentRepo.keySet())
+//            temp.add(name);
+//        return temp;
+        return new ArrayList<>(studentRepo.keySet());
     }
+    public void deleteTeacherByName(String teacher){
+        //removing students who are assigned to given teacher also
+        for(String name:teacherStudentRepo.get(teacher))
+            studentRepo.remove(name);
 
+        //removing teacher
+        teacherRepo.remove(teacher);
+        teacherStudentRepo.remove(teacher);
+    }
     public void deleteAllTeachers(){
-        // your code goes here
-        teacherMap.clear();
-        teacherStudentMapping.clear();
+        //removing all students that are linked to teachers also
+        for(String teacher:teacherRepo.keySet()){
+            deleteTeacherByName(teacher);
+            teacherRepo.remove(teacher);
+        }
+        // teacherRepo.clear();
+        teacherStudentRepo.clear();
     }
 }
